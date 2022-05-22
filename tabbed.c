@@ -185,7 +185,11 @@ static char winid[64];
 static char **cmd;
 static char *wmname = "tabbed";
 static const char *geometry;
+#if HIDETABS
 static Bool barvisibility = False;
+#else
+static Bool barvisibility = True;
+#endif
 
 static Colormap cmap;
 static Visual *visual = NULL;
@@ -349,7 +353,11 @@ drawbar(void)
 	char *name = NULL;
 	char tabtitle[256];
 
-        nbh = barvisibility ? vbh : 0;
+        #if HIDETABS
+        nbh = barvisibility && nclients > 1 ? vbh : 0;
+        #else
+        nbh = nclients > 1 ? vbh : 0;
+        #endif
         if (nbh != bh) {
                 bh = nbh;
                 for (c = 0; c < nclients; c++)
@@ -400,9 +408,12 @@ drawbar(void)
 		} else {
 			col = clients[c]->urgent ? dc.urg : dc.norm;
 		}
-		snprintf(tabtitle, sizeof(tabtitle), "%d: %s",
-		         c + 1, clients[c]->name);
-		drawtext(tabtitle, col);
+                if (clientNumber) {
+		        snprintf(tabtitle, sizeof(tabtitle), "%d: %s",
+		                 c + 1, clients[c]->name);
+		        drawtext(tabtitle, col);
+                } else
+                        drawtext(clients[c]->name, col);
 		dc.x += dc.w;
 		clients[c]->tabx = dc.x;
 	}
@@ -426,7 +437,7 @@ drawtext(const char *text, XftColor col[ColLast])
 	olen = strlen(text);
 	h = dc.font.ascent + dc.font.descent;
 	y = dc.y + (dc.h / 2) - (h / 2) + dc.font.ascent;
-	x = dc.x + (h / 2);
+        x = dc.x + (h / 2);
 
 	/* shorten text if necessary */
 	for (len = MIN(olen, sizeof(buf));
@@ -439,7 +450,7 @@ drawtext(const char *text, XftColor col[ColLast])
 	if (len < olen) {
 		for (i = len, j = strlen(titletrim); j && i;
 		     buf[--i] = titletrim[--j])
-			;
+                    ;
 	}
 
 	d = XftDrawCreate(dpy, dc.drawable, visual, cmap);
@@ -1098,13 +1109,13 @@ setup(void)
         XRenderPictFormat *fmt;
         int nvi;
         int i;
- 
+
         XVisualInfo tpl = {
                 .screen = screen,
                 .depth = 32,
                 .class = TrueColor
         };
- 
+
         vis = XGetVisualInfo(dpy, VisualScreenMask | VisualDepthMask | VisualClassMask, &tpl, &nvi);
         for(i = 0; i < nvi; i ++) {
                 fmt = XRenderFindVisualFormat(dpy, vis[i].visual);
@@ -1113,14 +1124,14 @@ setup(void)
                         break;
                 }
         }
- 
+
         XFree(vis);
- 
+
         if (! visual) {
                 fprintf(stderr, "Couldn't find ARGB visual.\n");
                 exit(1);
         }
- 
+
         cmap = XCreateColormap( dpy, root, visual, None);
 	dc.norm[ColBG] = getcolor(normbgcolor);
 	dc.norm[ColFG] = getcolor(normfgcolor);
@@ -1137,16 +1148,16 @@ setup(void)
                 | ButtonMotionMask | ButtonPressMask | ButtonReleaseMask;
         attrs.background_pixmap = None ;
         attrs.colormap = cmap;
- 
+
         win = XCreateWindow(dpy, root, wx, wy,
         ww, wh, 0, 32, InputOutput,
         visual, CWBackPixmap | CWBorderPixel | CWBitGravity
         | CWEventMask | CWColormap, &attrs);
- 
+
         dc.drawable = XCreatePixmap(dpy, win, ww, wh,
                                     32);
         dc.gc = XCreateGC(dpy, dc.drawable, 0, 0);
- 
+
 	XMapRaised(dpy, win);
 	XSelectInput(dpy, win, SubstructureNotifyMask | FocusChangeMask |
 	             ButtonPressMask | ExposureMask | KeyPressMask |
@@ -1405,13 +1416,13 @@ xrdb_load(void)
 		xrdb = XrmGetStringDatabase(xrm);
 
 		XRESOURCE_LOAD_STRING("color8", normbgcolor);
-		XRESOURCE_LOAD_STRING("color7", normfgcolor);
+		XRESOURCE_LOAD_STRING("color15", normfgcolor);
 
 		XRESOURCE_LOAD_STRING("color0", selbgcolor);
-		XRESOURCE_LOAD_STRING("color15", selfgcolor);
+		XRESOURCE_LOAD_STRING("color7", selfgcolor);
 
 		XRESOURCE_LOAD_STRING("color8", urgbgcolor);
-		XRESOURCE_LOAD_STRING("color6", urgfgcolor);
+		XRESOURCE_LOAD_STRING("color5", urgfgcolor);
 
                 XRESOURCE_LOAD_STRING("font", font);
 	}
@@ -1540,3 +1551,4 @@ main(int argc, char *argv[])
 
 	return EXIT_SUCCESS;
 }
+
