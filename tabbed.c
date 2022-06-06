@@ -1415,14 +1415,14 @@ xrdb_load(void)
 	if (xrm != NULL) {
 		xrdb = XrmGetStringDatabase(xrm);
 
-		XRESOURCE_LOAD_STRING("color8", normbgcolor);
-		XRESOURCE_LOAD_STRING("color15", normfgcolor);
+		XRESOURCE_LOAD_STRING("color0", normbgcolor);
+		XRESOURCE_LOAD_STRING("color12", normfgcolor);
 
-		XRESOURCE_LOAD_STRING("color0", selbgcolor);
-		XRESOURCE_LOAD_STRING("color7", selfgcolor);
+		XRESOURCE_LOAD_STRING("color12", selbgcolor);
+		XRESOURCE_LOAD_STRING("color0", selfgcolor);
 
-		XRESOURCE_LOAD_STRING("color8", urgbgcolor);
-		XRESOURCE_LOAD_STRING("color5", urgfgcolor);
+		XRESOURCE_LOAD_STRING("color0", urgbgcolor);
+		XRESOURCE_LOAD_STRING("color1", urgfgcolor);
 
                 XRESOURCE_LOAD_STRING("font", font);
 	}
